@@ -12,9 +12,10 @@ find_package(catkin REQUIRED COMPONENTS
              image_transport
             )
 
-find_package(OpenCV 2.4 REQUIRED COMPONENTS highgui imgproc  )
-message( "OPENCV " )
-message( ${OpenCV_INCLUDE_DIRS} )
+#find_package(OpenCV 2.4 REQUIRED COMPONENTS core highgui imgproc calib3d
+#                                            ml features2d objdetect )
+find_package(OpenCV REQUIRED)
+
 # Declare this project as a catkin package
 catkin_package(
 #  INCLUDE_DIRS include

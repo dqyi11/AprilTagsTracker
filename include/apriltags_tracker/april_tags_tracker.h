@@ -17,12 +17,13 @@ public:
   virtual ~AprilTagsTracker();
 
   void imageCallback( const sensor_msgs::ImageConstPtr& msg);
-
-  ros::NodeHandle m_nh;
+  std::vector<AprilTags::TagDetection> extractTags( cv::Mat& image);
+ 
+  ros::NodeHandle                 m_nh;
   image_transport::ImageTransport m_it;
-  image_transport::Subscriber m_sub;
+  image_transport::Subscriber     m_sub;
 
-  AprilTags::TagDetector* m_tag_detector;
+  AprilTags::TagDetector* mp_tag_detector;
   AprilTags::TagCodes     m_tag_codes;
 };
 
