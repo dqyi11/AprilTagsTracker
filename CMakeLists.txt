@@ -25,6 +25,8 @@ catkin_package(
 # Add the headers from roscpp
 include_directories(include ${catkin_INCLUDE_DIRS}
                             ${OpenCV_INCLUDE_DIRS}
+                            /usr/local/include
+                            /usr/include/eigen3
                             )
 
 # Define a library target called hello_world
@@ -36,5 +38,6 @@ add_executable(april_tags_tracker src/april_tags_tracker.cpp
               )
 target_link_libraries(april_tags_tracker ${catkin_LIBRARIES} 
                                          ${OpenCV_LIBRARIES}
+                                         apriltags
                      )
 
