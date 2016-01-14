@@ -6,12 +6,14 @@
 
 #include "apriltags_tracker/april_tags_tracker.h"
 #include "apriltags_tracker/april_tag_pos.h"
+#include "apriltags_tracker/target_pos.h"
 
 using namespace std;
 using namespace cv;
 
 #define APRIL_TAGS_TRACKER_VIEW "April Tags Tracker"
-#define APRIL_TAG_POS_MSG_NAME "april_tag_pos"
+#define APRIL_TAG_POS_MSG_NAME  "april_tag_pos"
+#define TARGET_POS_MSG_NAME     "target_pos"
 
 void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
   cv_bridge::CvImagePtr cv_ptr;
@@ -40,7 +42,10 @@ void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
     msg.x = tag.cxy.first;
     msg.y = tag.cxy.second;
     msg.orientation = tag.getXYOrientation();
-    m_pub.publish(msg); 
+    m_pos_pub.publish(msg); 
+  }
+  if( m_target_x > 0 && m_target_y > 0 ) {
+    circle( cv_ptr->image, Point2f( m_target_x, m_target_y ), 2, Scalar(0,0,255), 4 ); 
   }
   cv::imshow(APRIL_TAGS_TRACKER_VIEW, cv_ptr->image );
   int key_value = cv::waitKey(30);
@@ -50,13 +55,17 @@ void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
 }
 
 AprilTagsTracker::AprilTagsTracker( AprilTags::TagCodes codes  ) : m_it( m_nh ) , m_tag_codes( codes )  {
+  m_target_x = -1;
+  m_target_y = -1;
   cv::namedWindow(APRIL_TAGS_TRACKER_VIEW);
+  cv::setMouseCallback(APRIL_TAGS_TRACKER_VIEW, mouseClick, this );
   cv::startWindowThread();
   
   m_sub = m_it.subscribe("/usb_cam/image_raw", 1, &AprilTagsTracker::imageCallback, this);
   mp_tag_detector = new AprilTags::TagDetector( m_tag_codes ); 
 
-  m_pub = m_nh.advertise<apriltags_tracker::april_tag_pos>( APRIL_TAG_POS_MSG_NAME, 1000 );
+  m_pos_pub = m_nh.advertise<apriltags_tracker::april_tag_pos>( APRIL_TAG_POS_MSG_NAME, 1000 );
+  m_t_pos_pub = m_nh.advertise<apriltags_tracker::target_pos>( TARGET_POS_MSG_NAME, 1000 );
 }
 
 AprilTagsTracker::~AprilTagsTracker() {
@@ -71,4 +80,23 @@ std::vector<AprilTags::TagDetection> AprilTagsTracker::extractTags( cv::Mat& ima
    cv::Mat gray_img;
    cvtColor( image, gray_img, CV_BGR2GRAY );
    return mp_tag_detector->extractTags( gray_img );
+}
+  
+void AprilTagsTracker::mouseClick(int event, int x, int y, int flags, void* param) {
+
+  if( EVENT_LBUTTONDOWN == event ) {
+   
+    AprilTagsTracker* p_april_tags_tracker = static_cast<AprilTagsTracker*>( param );
+    if( p_april_tags_tracker ) {
+      p_april_tags_tracker->m_target_x = x;
+      p_april_tags_tracker->m_target_y = y;
+
+      apriltags_tracker::target_pos msg;
+      msg.id = 0;
+      msg.t_x = x;
+      msg.t_y = y;
+      msg.t_orientation = 0.0;
+      p_april_tags_tracker->m_t_pos_pub.publish(msg); 
+    }
+  }
 }

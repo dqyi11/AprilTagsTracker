@@ -18,15 +18,21 @@ public:
 
   void imageCallback( const sensor_msgs::ImageConstPtr& msg);
   std::vector<AprilTags::TagDetection> extractTags( cv::Mat& image);
+
+  static void mouseClick(int event, int x, int y, int flags, void* param);
  
   ros::NodeHandle                 m_nh;
   image_transport::ImageTransport m_it;
   image_transport::Subscriber     m_sub;
 
-  ros::Publisher                  m_pub;
+  ros::Publisher                  m_pos_pub;
+  ros::Publisher                  m_t_pos_pub;
 
   AprilTags::TagDetector* mp_tag_detector;
   AprilTags::TagCodes     m_tag_codes;
+
+  int m_target_x;
+  int m_target_y;
 };
 
 #endif // APRIL_TAGS_TRACKER_H_
