@@ -22,4 +22,10 @@
   <!-- Package Dependencies -->
   <build_depend>roscpp</build_depend>
   <run_depend>roscpp</run_depend>
+
+  <build_depend>april_tag_pos_msg</build_depend>
+  <run_depend>april_tag_pos_msg</run_depend>
+
+  <build_depend>message_generation</build_depend>
+  <run_depend>message_runtime</run_depend>
 </package>

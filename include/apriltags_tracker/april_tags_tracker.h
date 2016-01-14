@@ -23,6 +23,8 @@ public:
   image_transport::ImageTransport m_it;
   image_transport::Subscriber     m_sub;
 
+  ros::Publisher                  m_pub;
+
   AprilTags::TagDetector* mp_tag_detector;
   AprilTags::TagCodes     m_tag_codes;
 };
