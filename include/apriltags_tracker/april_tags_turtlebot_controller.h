@@ -20,6 +20,8 @@ public:
   ros::Subscriber  m_t_pos_sub;
   ros::Publisher   m_cmd_vel_pub;
 
+  float m_target_x;
+  float m_target_y;
 };
 
 #endif // APRIL_TAGS_TURTLEBOT_CONTROLLER_H_
