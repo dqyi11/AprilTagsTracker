@@ -43,7 +43,7 @@ void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
     msg.y = tag.cxy.second;
     msg.orientation = tag.getXYOrientation();
     m_pos_pub.publish(msg); 
-  
+
     if( m_target_x > 0 && m_target_y > 0 ) {
       line( cv_ptr->image, Point( tag.cxy.first, tag.cxy.second ), Point( m_target_x, m_target_y ), Scalar(255,255,0), 2 );
     }
@@ -52,8 +52,12 @@ void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
     circle( cv_ptr->image, Point2f( m_target_x, m_target_y ), 6, Scalar(255,0,0), 4 ); 
   }
   cv::imshow(APRIL_TAGS_TRACKER_VIEW, cv_ptr->image );
+  /*
   int key_value = cv::waitKey(30);
   if( key_value == (int)('q') ) {
+    ros::shutdown();
+  }*/
+  if( false == ros::ok() ) {
     ros::shutdown();
   }
 }

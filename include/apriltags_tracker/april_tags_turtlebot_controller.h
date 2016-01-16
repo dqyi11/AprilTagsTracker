@@ -22,6 +22,16 @@ public:
 
   float m_target_x;
   float m_target_y;
+
+  float m_max_linear_speed;
+  float m_min_linear_speed;
+  float m_min_positive_linear_speed;
+  float m_max_negative_linear_speed;
+  float m_max_angular_speed;
+  float m_min_angular_speed;
+  float m_min_positive_angular_speed;
+  float m_max_negative_angular_speed;
+  float m_ros_rate;
 };
 
 #endif // APRIL_TAGS_TURTLEBOT_CONTROLLER_H_
