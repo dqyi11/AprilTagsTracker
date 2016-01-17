@@ -16,6 +16,7 @@ using namespace cv;
 #define TARGET_POS_MSG_NAME     "target_pos"
 
 #define PI 3.1415926
+#define REACH_THRESHOLD 20
 
 float convRadius(float radius) {
   if( radius < 0 ) {
@@ -53,12 +54,34 @@ void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
     msg.orientation = convRadius( tag.getXYOrientation() );
     m_pos_pub.publish(msg); 
 
-    if( m_target_x > 0 && m_target_y > 0 ) {
-      line( cv_ptr->image, Point( tag.cxy.first, tag.cxy.second ), Point( m_target_x, m_target_y ), Scalar(255,255,0), 2 );
+    if( m_target_poses.size() > 0 && m_target_pos_idx >= 0 ) {
+      pair< Pos2D, bool> current_target = m_target_poses[m_target_pos_idx];
+      line( cv_ptr->image, Point( tag.cxy.first, tag.cxy.second ), Point( current_target.first.x, current_target.first.y ), Scalar(255,255,0), 2 );
+
+      if( is_current_target_reached( tag.cxy.first, tag.cxy.second, current_target.first.x, current_target.first.y ) ) {
+        m_target_poses[m_target_pos_idx].second = false;
+        if( m_target_pos_idx < m_target_poses.size()-1 ) {
+          m_target_pos_idx ++;
+          Pos2D new_target_pos = m_target_poses[m_target_pos_idx].first;
+          apriltags_tracker::target_pos msg;
+          msg.id = 0;
+          msg.t_x = new_target_pos.x;
+          msg.t_y = new_target_pos.y;
+          msg.t_orientation = 0.0;
+          m_t_pos_pub.publish(msg); 
+          
+        }
+      }
     }
   }
-  if( m_target_x > 0 && m_target_y > 0 ) {
-    circle( cv_ptr->image, Point2f( m_target_x, m_target_y ), 6, Scalar(255,0,0), 4 ); 
+  for( unsigned int i=0; i<m_target_poses.size(); i++ ) {
+    pair< Pos2D, bool > target = m_target_poses[i];
+    if( true == target.second ) {  
+      circle( cv_ptr->image, Point2f( target.first.x, target.first.y ), 6, Scalar(255,0,0), 4 ); 
+    } 
+    else {
+      circle( cv_ptr->image, Point2f( target.first.x, target.first.y ), 6, Scalar(255,0,0, 0.4), 4 ); 
+    }
   }
   cv::imshow(APRIL_TAGS_TRACKER_VIEW, cv_ptr->image );
   /*
@@ -72,8 +95,7 @@ void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
 }
 
 AprilTagsTracker::AprilTagsTracker( AprilTags::TagCodes codes  ) : m_it( m_nh ) , m_tag_codes( codes )  {
-  m_target_x = -1;
-  m_target_y = -1;
+  m_target_pos_idx = -1;
   cv::namedWindow(APRIL_TAGS_TRACKER_VIEW);
   cv::setMouseCallback(APRIL_TAGS_TRACKER_VIEW, mouseClick, this );
   cv::startWindowThread();
@@ -101,19 +123,41 @@ std::vector<AprilTags::TagDetection> AprilTagsTracker::extractTags( cv::Mat& ima
   
 void AprilTagsTracker::mouseClick(int event, int x, int y, int flags, void* param) {
 
+  AprilTagsTracker* p_april_tags_tracker = static_cast<AprilTagsTracker*>( param );
   if( EVENT_LBUTTONDOWN == event ) {
    
-    AprilTagsTracker* p_april_tags_tracker = static_cast<AprilTagsTracker*>( param );
     if( p_april_tags_tracker ) {
-      p_april_tags_tracker->m_target_x = x;
-      p_april_tags_tracker->m_target_y = y;
-
+      Pos2D pos;
+      pos.x = x;
+      pos.y = y;
+      p_april_tags_tracker->m_target_poses.push_back( make_pair( pos, true ) );
+    }
+  }
+  else if( EVENT_RBUTTONDOWN == event ) {
+    if( p_april_tags_tracker ) {
+      p_april_tags_tracker->m_target_pos_idx = 0;
+      pair< Pos2D, bool> first_pos = p_april_tags_tracker->m_target_poses[0];
+      Pos2D pos = first_pos.first;
       apriltags_tracker::target_pos msg;
       msg.id = 0;
-      msg.t_x = x;
-      msg.t_y = y;
+      msg.t_x = pos.x;
+      msg.t_y = pos.y;
       msg.t_orientation = 0.0;
       p_april_tags_tracker->m_t_pos_pub.publish(msg); 
     }
+  } 
+  else if( EVENT_MBUTTONDOWN == event ) {
+    if( p_april_tags_tracker ) {
+      p_april_tags_tracker->m_target_poses.clear();
+    }
   }
 }
+
+bool AprilTagsTracker::is_current_target_reached( int x, int y, int target_x, int target_y ) {
+  double distance = 0.0;
+  distance = sqrt( (x-target_x)*(x-target_x) + (y-target_y)*(y-target_y) );
+  if( distance < REACH_THRESHOLD ) {
+    return true;
+  }
+  return false;
+}   
