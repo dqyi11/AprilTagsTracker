@@ -1,15 +1,34 @@
 #include <iostream>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/PoseWithCovariance.h>
 #include "apriltags_tracker/april_tags_turtlebot_controller.h"
 #include <time.h>
 
 #define APRIL_TAG_POS_MSG_NAME      "/april_tag_pos"
 #define TARGET_POS_MSG_NAME         "/target_pos"
 #define TURTLEBOT_CMD_VEL_MSG_NAME  "/cmd_vel_mux/input/teleop"
+#define TURTLEBOT_NAVI_MSG_NAME     "/cmd_vel_mux/input/navi"
 
 using namespace std;
 
 static clock_t last_tick;
+
+#define PI 3.1415926
+
+float convRadius(float radius) {
+  if( radius < 0 ) {
+    radius = 2*PI + radius;
+  }
+  return radius;
+}
+
+float getDelta(float target, float current) {
+  float delta = target - current;
+  if( delta  < -PI ){
+     delta = 2*PI + delta;
+  }
+  return delta;
+}
 
 AprilTagsTurtlebotController::AprilTagsTurtlebotController() :
   m_max_linear_speed( 0.2f ), 
@@ -42,11 +61,13 @@ void AprilTagsTurtlebotController::positionCallback(const apriltags_tracker::apr
     ros::shutdown();
   }
  
-  clock_t current_tick = clock();
-  if( (float)(current_tick - last_tick)*1000/CLOCKS_PER_SEC >= m_ros_rate ) {
-    last_tick = current_tick;
+  //clock_t current_tick = clock();
+  //float delta_ms = (float)(current_tick - last_tick)*1000000/CLOCKS_PER_SEC;
+  //cout << "DELTA_MS " << delta_ms << endl; 
+  //if( delta_ms >= m_ros_rate ) {
+    //last_tick = current_tick;
     control( msg->x, msg->y, msg->orientation );
-  }
+  //}
 }
 
 void AprilTagsTurtlebotController::targetPositionCallback(const apriltags_tracker::target_pos::ConstPtr& msg) {
@@ -60,23 +81,25 @@ void AprilTagsTurtlebotController::control(float x, float y, float orientation) 
 
   float linear_vel = 0.0f;
   float angular_vel = 0.0f;
-  float factor = 2.0f;
+  float factor = -0.5f;
   
   if( m_target_x > 0 && m_target_y > 0 ) {
-    float target_orientation = atan2( m_target_y-y, m_target_x-x );
+    float target_orientation = convRadius( atan2( m_target_y-y, m_target_x-x ) );
     float distance = sqrt( pow(x-m_target_x,2) + pow(y-m_target_y,2) );
     if( distance > 20 ) {
-      linear_vel = 0.05;
+      linear_vel = 0.1;
     }
-    
-    angular_vel = factor * (target_orientation - orientation);
+
+    float delta_angular = getDelta( target_orientation ,  orientation );
+    angular_vel = factor * delta_angular;
+    cout << "TO " << target_orientation << " O " << orientation << " A " << angular_vel << endl;
     if( angular_vel > 0 ) {
       angular_vel = max( min(angular_vel, m_max_angular_speed), m_min_positive_angular_speed ); 
     }
     else {
       angular_vel = min( max(angular_vel, m_min_angular_speed), m_max_negative_angular_speed );
     }
-
+    cout << "ANGULAR(" << angular_vel <<") VELOCITY(" << linear_vel << ")" << endl;
     geometry_msgs::Twist vel_cmd;
     vel_cmd.linear.x = linear_vel;
     vel_cmd.linear.y = 0.0;

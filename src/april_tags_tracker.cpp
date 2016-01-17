@@ -15,6 +15,15 @@ using namespace cv;
 #define APRIL_TAG_POS_MSG_NAME  "april_tag_pos"
 #define TARGET_POS_MSG_NAME     "target_pos"
 
+#define PI 3.1415926
+
+float convRadius(float radius) {
+  if( radius < 0 ) {
+    radius = 2*PI + radius;
+  }
+  return radius;
+}
+
 void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
   cv_bridge::CvImagePtr cv_ptr;
   try {
@@ -41,7 +50,7 @@ void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
     msg.id = tag.id;
     msg.x = tag.cxy.first;
     msg.y = tag.cxy.second;
-    msg.orientation = tag.getXYOrientation();
+    msg.orientation = convRadius( tag.getXYOrientation() );
     m_pos_pub.publish(msg); 
 
     if( m_target_x > 0 && m_target_y > 0 ) {
