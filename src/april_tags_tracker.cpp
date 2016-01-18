@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -160,4 +162,30 @@ bool AprilTagsTracker::is_current_target_reached( int x, int y, int target_x, in
     return true;
   }
   return false;
-}   
+}  
+ 
+void AprilTagsTracker::loadFile( char* filename ) {
+  ifstream read_file;
+  m_target_poses.clear();
+  m_target_pos_idx = -1;
+  read_file.open( filename );
+  if( !read_file.good() ) {
+    cout << "FAILED IN OPEN " << filename << endl;
+    return;
+  }
+  std::string line_str;
+  while( !read_file.eof() ) {
+    getline( read_file , line_str );
+    std::cout << line_str << std::endl;
+    std::istringstream iss( line_str );
+    int x, y;
+    if( !( iss >> x >> y ) ){
+      break; 
+    }
+    Pos2D pos;
+    pos.x = x;
+    pos.y = y;
+    std::cout << "READ " << x << " " << y << std::endl;
+    m_target_poses.push_back( make_pair( pos, true ) ); 
+  }
+}

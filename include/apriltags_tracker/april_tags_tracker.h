@@ -26,6 +26,7 @@ public:
   std::vector<AprilTags::TagDetection> extractTags( cv::Mat& image);
 
   static void mouseClick(int event, int x, int y, int flags, void* param);
+  void loadFile( char* filename );
  
   bool is_current_target_reached( int x, int y, int target_x, int target_y );
  
