@@ -82,7 +82,7 @@ void AprilTagsTracker::imageCallback( const sensor_msgs::ImageConstPtr& msg) {
       circle( cv_ptr->image, Point2f( target.first.x, target.first.y ), 6, Scalar(255,0,0), 4 ); 
     } 
     else {
-      circle( cv_ptr->image, Point2f( target.first.x, target.first.y ), 6, Scalar(255,0,0, 0.4), 4 ); 
+      circle( cv_ptr->image, Point2f( target.first.x, target.first.y ), 3, Scalar(255,0,0, 0.4), 4 ); 
     }
   }
   cv::imshow(APRIL_TAGS_TRACKER_VIEW, cv_ptr->image );
