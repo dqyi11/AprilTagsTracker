@@ -18,7 +18,7 @@ using namespace cv;
 #define TARGET_POS_MSG_NAME     "target_pos"
 
 #define PI 3.1415926
-#define REACH_THRESHOLD 20
+#define REACH_THRESHOLD 30
 
 float convRadius(float radius) {
   if( radius < 0 ) {

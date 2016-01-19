@@ -81,21 +81,13 @@ void AprilTagsTurtlebotController::control(float x, float y, float orientation) 
 
   float linear_vel = 0.0f;
   float angular_vel = 0.0f;
-  float factor = -1.0f;
+  float factor = -2.0f;
   
   if( m_target_x > 0 && m_target_y > 0 ) {
     float target_orientation = convRadius( atan2( m_target_y-y, m_target_x-x ) );
     float distance = sqrt( pow(x-m_target_x,2) + pow(y-m_target_y,2) );
 
     float delta_angular = getDelta( target_orientation ,  orientation );
-    if( distance >  5 ) {
-      if( abs( delta_angular ) < 0.3 ) {
-        linear_vel = 0.25;
-      } 
-      else {
-        linear_vel = 0.1;
-      }
-    }
     angular_vel = factor * delta_angular;
     cout << "TO " << target_orientation << " O " << orientation << " A " << angular_vel << endl;
     if( angular_vel > 0 ) {
@@ -103,6 +95,14 @@ void AprilTagsTurtlebotController::control(float x, float y, float orientation) 
     }
     else {
       angular_vel = min( max(angular_vel, m_min_angular_speed), m_max_negative_angular_speed );
+    }
+    if( distance >  5 ) {
+      if( abs( delta_angular ) < 0.1 ) {
+        linear_vel = 0.25;
+      } 
+      else {
+        linear_vel = 0.05;
+      }
     }
     cout << "ANGULAR(" << angular_vel <<") VELOCITY(" << linear_vel << ")" << endl;
     geometry_msgs::Twist vel_cmd;
