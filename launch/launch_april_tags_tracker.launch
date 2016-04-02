@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+   <include file="$(find apriltags_tracker)/launch/camera.launch"/>
+
+   <node pkg="apriltags_tracker" type="april_tags_tracker" name="april_tags_tracker" />
+   <node pkg="apriltags_tracker" type="april_tags_turtlebot_controller" name="april_tags_turtlebot_controller" />
+</launch>
