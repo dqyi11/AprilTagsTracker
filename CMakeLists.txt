@@ -16,7 +16,22 @@ find_package(catkin REQUIRED COMPONENTS
 
 #find_package(OpenCV 2.4 REQUIRED COMPONENTS core highgui imgproc calib3d
 #                                            ml features2d objdetect )
+find_package(cmake_modules)
+find_package(Eigen REQUIRED)
 find_package(OpenCV REQUIRED)
+
+# Find package apriltags
+find_package(PkgConfig)
+pkg_check_modules(APRILTAGS apriltags)
+if( NOT APRILTAGS_FOUND )
+  message( "Apriltags not found\n" )
+  return()
+endif()
+find_path(APRILTAGS_INCLUDE_DIR AprilTags/TagDetector.h
+    HINTS ${APRILTAGS_INCLUDEDIR} ${APRILTAGS_INCLUDE_DIRS})
+
+find_library(APRILTAGS_LIBRARY apriltags
+    HINTS ${APRILTAGS_LIBDIR} ${APRILTAGS_LIBRARY_DIRS})
 
 add_message_files (
   FILES
@@ -40,8 +55,8 @@ catkin_package(
 # Add the headers from roscpp
 include_directories(include ${catkin_INCLUDE_DIRS}
                             ${OpenCV_INCLUDE_DIRS}
-                            /usr/local/include
-                            /usr/include/eigen3
+                            ${Eigen_INCLUDE_DIRS}
+                            ${APRILTAGS_INCLUDE_DIRS}
                             )
 
 # Define a library target called hello_world
@@ -53,7 +68,7 @@ add_executable(april_tags_tracker src/april_tags_tracker.cpp
               )
 target_link_libraries(april_tags_tracker ${catkin_LIBRARIES} 
                                          ${OpenCV_LIBRARIES}
-                                         apriltags
+                                         ${APRILTAGS_LIBRARY}
                      )
 
 add_executable(april_tags_turtlebot_controller src/april_tags_turtlebot_controller.cpp
